@@ -1,0 +1,10 @@
+{
+  "name": "NoticeTrail",
+  "short_name": "NoticeTrail",
+  "description": "Make the next step clear.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fc",
+  "theme_color": "#ff9100",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
