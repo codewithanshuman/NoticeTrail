@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowDownToLine, ArrowRight, BookOpenText, Check, CheckCircle2, ChevronDown, Clipboard, Cloud, FileImage, FileText, GitCompareArrows, Info, LockKeyhole, RotateCcw, ScanLine, ShieldCheck, Sparkles, UploadCloud, X } from 'lucide-react';
 import { isConfigured, makeBrief } from './firebase';
 import { downloadBrief, formatBrief } from './export';
+import Planner from './Planner';
+import { listTasks, saveTask, taskId, type PlanInput, type PlanItem } from './taskStore';
 import CompareWorkspace from './CompareWorkspace';
 import { sampleBrief, sampleNotice } from './sample';
 import type { Brief, PrivacyMode, Source } from './types';
@@ -19,7 +21,31 @@ function App() {
   const [checked, setChecked] = useState<number[]>([]);
   const [copied, setCopied] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [workflow, setWorkflow] = useState<'brief' | 'compare'>('brief');
+  const [workflow, setWorkflow] = useState<'brief' | 'compare' | 'plan'>('brief');
+
+  const [items, setItems] = useState<PlanItem[]>([]);
+  const [planMessage, setPlanMessage] = useState('');
+  async function refresh() { setItems(await listTasks()); }
+  useEffect(() => {
+    const reload = () => { refresh().catch(() => setPlanMessage('Browser storage is unavailable. Saving requires storage access.')); };
+    reload();
+    window.addEventListener('focus', reload);
+    return () => window.removeEventListener('focus', reload);
+  }, []);
+
+  async function save(input: PlanInput, done = false) {
+    try {
+      await saveTask(input, done);
+      await refresh();
+      setPlanMessage('Saved to My plan.');
+      return true;
+    } catch { setPlanMessage('Could not save this task. Check your browser storage.'); return false; }
+  }
+
+  function saveButton(input: PlanInput, done = false) {
+    const saved = items.some(item => item.id === taskId(input));
+    return <button className="save-step" disabled={saved} onClick={() => save(input, done)}>{saved ? 'Saved to My plan' : 'Save to My plan'}</button>;
+  }
 
   useEffect(() => {
     if (!file) { setImageUrl(null); return; }
@@ -28,6 +54,8 @@ function App() {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
+  const [selection, setSelection] = useState({ notice: '', quote: '' });
+  const excerpt = selection.notice === text ? selection.quote : '';
   const count = useMemo(() => text.trim().length, [text]);
   const canGenerate = isConfigured && !busy && (count >= 20 || Boolean(file));
 
@@ -110,15 +138,21 @@ function App() {
         </section>
 
         <section className="workspace" aria-label="Notice analyzer">
-          <div className="workspace-heading"><div><span className="section-kicker">YOUR WORKSPACE</span><h2>{workflow === 'brief' ? 'Start with a notice.' : 'See what changed.'}</h2><p>{workflow === 'brief' ? 'Paste the words or add a screenshot. We’ll help pull out the signal.' : 'Compare an original notice with an update, backed by excerpts from both.'}</p></div>{workflow === 'brief' && <button className="text-button" disabled={busy} onClick={resetExample}><RotateCcw size={15} /> Load example</button>}</div>
-          <div className="workflow-tabs" role="tablist" aria-label="Choose workflow"><button role="tab" aria-selected={workflow === 'brief'} className={workflow === 'brief' ? 'active' : ''} onClick={() => setWorkflow('brief')}><FileText size={16} /> Make a brief</button><button role="tab" aria-selected={workflow === 'compare'} className={workflow === 'compare' ? 'active' : ''} onClick={() => setWorkflow('compare')}><GitCompareArrows size={16} /> Compare updates</button></div>
-          {!isConfigured && <div className="setup-banner" role="status"><Info size={18} /><div><strong>Preview mode</strong><span>The {workflow === 'brief' ? 'brief' : 'comparison'} below is a prewritten example. Connect your Firebase project to run live AI. See the README for setup.</span></div></div>}
+          <div className="workspace-heading"><div><span className="section-kicker">YOUR WORKSPACE</span><h2>{workflow === 'brief' ? 'Start with a notice.' : workflow === 'compare' ? 'See what changed.' : 'Track your next steps.'}</h2><p>{workflow === 'brief' ? 'Paste the words or add a screenshot. We’ll help pull out the signal.' : workflow === 'plan' ? 'Review saved steps, check their sources, and set deadlines.' : 'Compare an original notice with an update, backed by excerpts from both.'}</p></div>{workflow === 'brief' && <button className="text-button" disabled={busy} onClick={resetExample}><RotateCcw size={15} /> Load example</button>}</div>
+          <div className="workflow-tabs" role="tablist" aria-label="Choose workflow"><button role="tab" aria-selected={workflow === 'brief'} className={workflow === 'brief' ? 'active' : ''} onClick={() => setWorkflow('brief')}><FileText size={16} /> Make a brief</button><button role="tab" aria-selected={workflow === 'compare'} className={workflow === 'compare' ? 'active' : ''} onClick={() => setWorkflow('compare')}><GitCompareArrows size={16} /> Compare updates</button><button role="tab" aria-selected={workflow === 'plan'} className={workflow === 'plan' ? 'active' : ''} onClick={() => setWorkflow('plan')}><CheckCircle2 size={16}/> My plan ({items.length})</button></div>
+          {planMessage && <p role="status">{planMessage}</p>}
+          {workflow === 'plan' && <Planner items={items} refresh={refresh} save={save} report={setPlanMessage}/>}
+          {!isConfigured && workflow !== 'plan' && <div className="setup-banner" role="status"><Info size={18}/><div><strong>Live AI needs setup</strong><span>Explore the labeled examples, compare wording locally, or save tasks to your plan.</span></div></div>}
           <div className="workspace-grid" hidden={workflow !== 'brief'}>
             <div className="input-card">
               <div className="card-heading"><div className="card-icon"><FileText size={19} /></div><div><span className="card-step">01 / INPUT</span><h3>What does it say?</h3></div></div>
               <label className="field-label" htmlFor="notice-text">PASTE YOUR NOTICE</label>
-              <textarea id="notice-text" value={text} maxLength={12000} disabled={busy} onChange={(e) => { setText(e.target.value); setBrief(null); setSource(null); setChecked([]); setError(''); }} placeholder="Paste a school note, community update, workplace message, or other everyday notice..." />
+              <textarea id="notice-text" onSelect={e => {
+                const field = e.currentTarget;
+                setSelection({ notice: field.value, quote: field.value.slice(field.selectionStart, field.selectionEnd).trim() });
+              }} value={text} maxLength={12000} disabled={busy} onChange={(e) => { setText(e.target.value); setBrief(null); setSource(null); setChecked([]); setError(''); }} placeholder="Paste a school note, community update, workplace message, or other everyday notice..." />
               <div className="field-meta"><span>Plain text works best for quick on-device analysis</span><span>{count.toLocaleString()} / 12,000</span></div>
+              <div className="excerpt-save">{excerpt ? saveButton({ task: excerpt, notice: text.trim().split(/\r?\n/)[0].slice(0, 80), evidence: excerpt, origin: text === sampleNotice ? 'Example excerpt' : 'Selected by you' }) : <small>Select a passage above to save it to your plan.</small>}</div>
               <div className="divider"><span>OR ADD A FILE</span></div>
               <label className={`upload-zone ${dragging ? 'dragging' : ''}`} onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(e) => { e.preventDefault(); setDragging(false); selectFile(e.dataTransfer.files[0] || null); }}>
                 <input type="file" accept="image/png,image/jpeg,text/plain,.txt" disabled={busy} onChange={(e) => selectFile(e.target.files?.[0] || null)} />
@@ -141,14 +175,14 @@ function App() {
               {brief ? <>
                 <div className={`source-chip ${source === 'ON_DEVICE' ? 'device' : source === 'IN_CLOUD' ? 'cloud' : ''}`}>{source === 'SAMPLE' ? <Sparkles size={14} /> : source === 'ON_DEVICE' ? <LockKeyhole size={14} /> : source === 'IN_CLOUD' ? <Cloud size={14} /> : <Info size={14} />}{source === 'SAMPLE' ? 'PREWRITTEN EXAMPLE' : source === 'ON_DEVICE' ? 'GENERATED ON THIS DEVICE' : source === 'IN_CLOUD' ? 'GENERATED IN THE CLOUD' : 'SOURCE NOT REPORTED'}</div>
                 <h4 className="brief-title">{brief.title}</h4><p className="brief-summary">{brief.summary || 'No reliable summary was returned.'}</p>
-                <div className="result-section"><div className="result-section-heading"><span className="section-symbol purple"><Check size={16} /></span><h5>Your next steps</h5><span className="section-count">{brief.actions.length}</span></div>{brief.actions.length ? <div className="action-list">{brief.actions.map((item, i) => <div className={`action-item ${checked.includes(i) ? 'done' : ''}`} key={`${i}-${item.task}`}><button className="check-button" aria-label={`Mark step ${i + 1} ${checked.includes(i) ? 'incomplete' : 'complete'}`} onClick={() => setChecked((old) => old.includes(i) ? old.filter((x) => x !== i) : [...old, i])}>{checked.includes(i) && <Check size={14} />}</button><div><p>{item.task}</p>{item.evidence && <details><summary>Show source <ChevronDown size={13} /></summary><blockquote>{item.evidence}</blockquote></details>}</div></div>)}</div> : <p className="empty-line">No explicit action found.</p>}</div>
+                <div className="result-section"><div className="result-section-heading"><span className="section-symbol purple"><Check size={16} /></span><h5>Your next steps</h5><span className="section-count">{brief.actions.length}</span></div>{brief.actions.length ? <div className="action-list">{brief.actions.map((item, i) => <div className={`action-item ${checked.includes(i) ? 'done' : ''}`} key={`${i}-${item.task}`}><button className="check-button" aria-label={`Mark step ${i + 1} ${checked.includes(i) ? 'incomplete' : 'complete'}`} onClick={() => setChecked((old) => old.includes(i) ? old.filter((x) => x !== i) : [...old, i])}>{checked.includes(i) && <Check size={14} />}</button><div><p>{item.task}</p>{saveButton({ task: item.task, evidence: item.evidence, notice: brief.title, origin: { ON_DEVICE: 'On-device AI', IN_CLOUD: 'Cloud AI', SAMPLE: 'Example', UNKNOWN: 'AI source unreported' }[source || 'UNKNOWN'] }, checked.includes(i))}{item.evidence && <details><summary>Show source <ChevronDown size={13} /></summary><blockquote>{item.evidence}</blockquote></details>}</div></div>)}</div> : <p className="empty-line">No explicit action found.</p>}</div>
                 <div className="result-section"><div className="result-section-heading"><span className="section-symbol orange">◎</span><h5>Dates to notice</h5><span className="section-count">{brief.dates.length}</span></div>{brief.dates.length ? <div className="date-list">{brief.dates.map((item, i) => <div className="date-item" key={`${i}-${item.date}`}><strong>{item.date}</strong><span>{item.meaning}</span>{item.evidence && <details><summary>Source <ChevronDown size={13} /></summary><blockquote>{item.evidence}</blockquote></details>}</div>)}</div> : <p className="empty-line">No explicit dates found.</p>}</div>
                 <div className="result-section last"><div className="result-section-heading"><span className="section-symbol blue">?</span><h5>Worth asking</h5></div>{brief.questions.length ? <ul className="question-list">{brief.questions.map((q, i) => <li key={`${i}-${q}`}>{q}</li>)}</ul> : <p className="empty-line">No unanswered questions suggested.</p>}</div>
                 <div className="result-footnote"><Info size={14} /> AI can miss details. Check the original notice before acting.</div>
               </> : <div className="empty-result"><div className="empty-illustration"><FileText size={38} /><Sparkles size={21} /></div><h4>A little clarity is on its way.</h4><p>Add a notice and choose <strong>Make it clear</strong> to see your summary, steps, and important dates here.</p></div>}
             </div>
           </div>
-          <div hidden={workflow !== 'compare'}><CompareWorkspace /></div>
+          <div hidden={workflow !== 'compare'}><CompareWorkspace saveButton={saveButton} /></div>
         </section>
 
         <section className="how-section" id="how-it-works"><div><span className="section-kicker">THOUGHTFULLY HYBRID</span><h2>The right intelligence<br />for the moment.</h2><p>Every notice deserves a clear reading. You choose how much of it leaves your device.</p></div><div className="how-cards"><div className="how-card"><span className="how-icon green"><LockKeyhole size={21} /></span><h3>Local when possible</h3><p>Firebase AI Logic can run Gemini Nano on a supported Chrome desktop, including when you’re offline after setup.</p></div><div className="how-card"><span className="how-icon peach"><Cloud size={21} /></span><h3>Cloud when needed</h3><p>Automatic mode falls back to Gemini in the cloud if the local model is unavailable. The brief shows which path ran.</p></div></div></section>

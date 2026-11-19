@@ -8,6 +8,12 @@ Many notices contain personal details, and users may have limited connectivity. 
 
 The starter includes a **clearly labeled, prewritten sample** so the interface can be explored before Firebase is connected. This is not a simulated AI response. Live inference needs your own Firebase project and App Check configuration.
 
+## Try the planner before connecting Firebase
+
+Paste a notice, select the sentence you need to act on, and choose **Save to My plan**. You can also save steps from a brief or a suggested change. **My plan** keeps the source excerpt and the origin of each saved item in this browser. Search, set a due date, or mark a task complete. **Export open deadlines** creates an all-day calendar file for open tasks with dates you have confirmed.
+
+In **Compare updates**, enter two versions and expand **Inspect exact text changes**. Additions and deletions appear locally, including before Firebase setup. The separate AI comparison explains which changes affect the reader.
+
 ## Run locally
 
 1. Install Node.js 20.19+ or 22.12+.
@@ -42,7 +48,7 @@ Firebase setup: [web hybrid guide](https://firebase.google.com/docs/ai-logic/hyb
 - Compare two pasted text notices and receive changed, added, or removed items with evidence from both versions. Unsupported comparisons are filtered out in the browser.
 - Check off steps in the current session, copy the brief, or download it as a TXT file.
 - Once visited in a production build, the app shell is cached for offline reload. Local AI inference still depends on Chrome's on-device model and any Firebase App Check requirements being ready.
-- Input and results stay in browser memory; NoticeTrail does not save them or send them to its own server. Automatic mode **can** send notice content to the Gemini cloud model through Firebase AI Logic.
+- Unsaved notices and results stay in browser memory. Saving a step stores its task, notice title, source excerpt, and origin in local IndexedDB until removed; there is no account or server sync. Automatic mode **can** send notice content to the Gemini cloud model through Firebase AI Logic.
 - The model is instructed to avoid invented dates and actions, but results still need human review.
 
 ## Limits and next build targets

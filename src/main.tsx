@@ -4,6 +4,7 @@ import App from './App';
 import './style.css';
 import './additions.css';
 import './firebase-theme.css';
+import './plan.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode><App /></React.StrictMode>,

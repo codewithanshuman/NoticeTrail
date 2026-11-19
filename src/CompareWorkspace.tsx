@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react';
+import type { PlanInput } from './taskStore';
+import TextChanges from './TextChanges';
 import { useState } from 'react';
 import { ArrowDownToLine, ArrowRight, Check, ChevronDown, Clipboard, Cloud, GitCompareArrows, Info, LockKeyhole, RotateCcw, Sparkles } from 'lucide-react';
 import { compareNotices, isConfigured } from './firebase';
@@ -35,7 +38,7 @@ function downloadComparison(comparison: Comparison, source: Source) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export default function CompareWorkspace() {
+export default function CompareWorkspace({saveButton}: {saveButton: (input: PlanInput) => ReactNode}) {
   const [oldText, setOldText] = useState(sampleOldNotice);
   const [newText, setNewText] = useState(sampleNewNotice);
   const [mode, setMode] = useState<PrivacyMode>('auto');
@@ -82,6 +85,7 @@ export default function CompareWorkspace() {
       <label className="field-label" htmlFor="new-notice">UPDATED NOTICE</label>
       <textarea id="new-notice" value={newText} maxLength={6000} disabled={busy} onChange={(e) => updateNew(e.target.value)} placeholder="Paste the newer version here..." />
       <div className="compare-meta">{newText.length.toLocaleString()} / 6,000</div>
+      <TextChanges before={oldText} after={newText}/>
       <div className="privacy-title"><span className="field-label">WHERE SHOULD AI RUN?</span></div>
       <div className="mode-options" role="radiogroup" aria-label="Comparison privacy mode" onKeyDown={(e) => { if (!busy && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) { e.preventDefault(); const next = mode === 'auto' ? 'device' : 'auto'; setMode(next); (e.currentTarget.querySelector(`[data-mode="${next}"]`) as HTMLButtonElement | null)?.focus(); } }}>
         <button className={`mode-option ${mode === 'auto' ? 'selected' : ''}`} data-mode="auto" disabled={busy} role="radio" aria-checked={mode === 'auto'} onClick={() => setMode('auto')}><span className="radio-dot" /><span><strong>Automatic</strong><small>Device first, cloud fallback</small></span><Cloud size={19} /></button>
@@ -98,7 +102,7 @@ export default function CompareWorkspace() {
         <div className={`source-chip ${source === 'ON_DEVICE' ? 'device' : source === 'IN_CLOUD' ? 'cloud' : ''}`}>{source === 'SAMPLE' ? <Sparkles size={14} /> : source === 'ON_DEVICE' ? <LockKeyhole size={14} /> : source === 'IN_CLOUD' ? <Cloud size={14} /> : <Info size={14} />}{sourceNames[source]}</div>
         <h4 className="brief-title">{comparison.headline}</h4><p className="brief-summary">{comparison.summary || 'Review both notices for changes.'}</p>
         <div className="compare-count"><strong>{comparison.changes.length}</strong><span>meaningful {comparison.changes.length === 1 ? 'change' : 'changes'} found</span></div>
-        {comparison.changes.length ? <div className="change-list">{comparison.changes.map((change, index) => <article className="change-card" key={`${index}-${change.impact}`}><div className="change-top"><span className={`change-kind ${change.kind}`}>{change.kind}</span><strong>{change.impact}</strong></div><div className="change-pair">{change.before && <div><small>BEFORE</small><p>{change.before}</p></div>}{change.after && <div><small>AFTER</small><p>{change.after}</p></div>}</div><details><summary>See evidence from both notices <ChevronDown size={13} /></summary>{change.beforeEvidence && <blockquote><b>Old:</b> {change.beforeEvidence}</blockquote>}{change.afterEvidence && <blockquote><b>New:</b> {change.afterEvidence}</blockquote>}</details></article>)}</div> : <p className="empty-line">No supported changes found. Read both originals to confirm.</p>}
+        {comparison.changes.length ? <div className="change-list">{comparison.changes.map((change, index) => <article className="change-card" key={`${index}-${change.impact}`}><div className="change-top"><span className={`change-kind ${change.kind}`}>{change.kind}</span><strong>{change.impact}</strong></div><div className="change-pair">{change.before && <div><small>BEFORE</small><p>{change.before}</p></div>}{change.after && <div><small>AFTER</small><p>{change.after}</p></div>}</div><details><summary>See evidence from both notices <ChevronDown size={13} /></summary>{change.beforeEvidence && <blockquote><b>Old:</b> {change.beforeEvidence}</blockquote>}{change.afterEvidence && <blockquote><b>New:</b> {change.afterEvidence}</blockquote>}</details>{change.kind !== 'removed' && saveButton({task: change.impact, notice: comparison.headline, evidence: change.afterEvidence, origin: sourceNames[source]})}</article>)}</div> : <p className="empty-line">No supported changes found. Read both originals to confirm.</p>}
         <div className="result-footnote"><Info size={14} /> For pasted text, unsupported quotes are filtered out. Review both originals before acting.</div>
       </> : <div className="empty-result"><div className="empty-illustration"><GitCompareArrows size={38} /><Sparkles size={21} /></div><h4>Know what moved.</h4><p>Paste both versions to see changed dates, places, requirements, and instructions here.</p></div>}
     </div>

@@ -1,0 +1,16 @@
+.workflow-tabs,.plan-head,.plan-head>div,.plan-tools,.plan-tools>div,.task-entry{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem}
+.plan-head,.plan-tools{justify-content:space-between}
+.planner p,.plan-list small,.plan-list label{color:#60584c}
+.planner p{font-size:.9rem;line-height:1.6}
+.planner input{font:inherit;min-width:0;border:1px solid #cfc6b9;border-radius:8px;padding:.65rem .8rem;background:white;color:#302d27}
+.task-entry{margin:1.4rem 0}.task-entry input{flex:1}
+.task-entry button,.plan-tools button,.save-step{font:inherit;font-size:.82rem;font-weight:650;padding:.6rem .8rem;border:1px solid #d9c9b6;border-radius:8px;background:#fffaf2;color:#59380a;cursor:pointer}
+.task-entry button,.plan-tools button[aria-pressed=true]{background:#ffcf68;border-color:#edb040}
+.planner button:disabled,.save-step:disabled{opacity:.62;cursor:default}
+.plan-tools{border-bottom:1px solid #ece2d5;padding-bottom:1rem}.plan-list{list-style:none;margin:0;padding:0}
+.plan-list li{display:grid;grid-template-columns:auto 1fr auto auto;gap:.8rem;align-items:start;padding:1rem 0;border-bottom:1px solid #eee6dc}.plan-list li>div{overflow-wrap:anywhere}
+.plan-list small,.plan-list label input{display:block;margin-top:.3rem}.plan-list label{font-size:.75rem}.plan-list strong{font-size:.94rem}
+.plan-check{border:1px solid #987e58;background:white;width:22px;height:22px;border-radius:6px}.plan-check.completed{background:#ffcd63}
+.plan-empty,.diff-panel{background:#fff9ee;border-radius:12px;padding:1rem}.save-step{margin-top:.5rem}.planner details,.diff-panel{margin-top:.8rem}
+.diff-panel summary{font-weight:700;cursor:pointer}.diff-panel p{font-size:.85rem}.diff-lines{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75}.diff-lines ins{background:#d7efd8;color:#21552a}.diff-lines del{background:#ffe0d9;color:#892912}
+@media(max-width:640px){.plan-list li{grid-template-columns:auto 1fr auto}.plan-list label{grid-column:2}.workflow-tabs button{padding:.6rem}.plan-tools>input{width:100%}}
