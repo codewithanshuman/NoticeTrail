@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react';
 import type { PlanInput } from './taskStore';
+import SourceExcerpt from './SourceExcerpt';
 import TextChanges from './TextChanges';
 import { useState } from 'react';
-import { ArrowDownToLine, ArrowRight, Check, ChevronDown, Clipboard, Cloud, GitCompareArrows, Info, LockKeyhole, RotateCcw, Sparkles } from 'lucide-react';
+import { ArrowDownToLine, ArrowRight, Check, Clipboard, Cloud, GitCompareArrows, Info, LockKeyhole, RotateCcw, Sparkles } from 'lucide-react';
 import { compareNotices, isConfigured } from './firebase';
 import { sampleComparison, sampleNewNotice, sampleOldNotice } from './sample';
 import type { Comparison, PrivacyMode, Source } from './types';
 
 const sourceNames: Record<Source, string> = {
-  SAMPLE: 'PREWRITTEN EXAMPLE',
+  SAMPLE: 'Prewritten example',
   ON_DEVICE: 'GENERATED ON THIS DEVICE',
   IN_CLOUD: 'GENERATED IN THE CLOUD',
   UNKNOWN: 'SOURCE NOT REPORTED',
@@ -77,8 +78,8 @@ export default function CompareWorkspace({saveButton}: {saveButton: (input: Plan
 
   return <div className="compare-grid">
     <div className="input-card compare-input">
-      <div className="card-heading"><div className="card-icon"><GitCompareArrows size={19} /></div><div><span className="card-step">01 / TWO VERSIONS</span><h3>Which notice is newer?</h3></div><button className="text-button compare-reset" disabled={busy} onClick={reset}><RotateCcw size={14} /> Example</button></div>
-      <label className="field-label" htmlFor="old-notice">ORIGINAL NOTICE</label>
+      <div className="card-heading"><GitCompareArrows size={19}/><h2>Source notices</h2><button className="text-button compare-reset" disabled={busy} onClick={reset}><RotateCcw size={14} /> Example</button></div>
+      <a className="jump-result" href="#revision-brief">Jump to revision brief ↓</a><label className="field-label" htmlFor="old-notice">ORIGINAL NOTICE</label>
       <textarea id="old-notice" value={oldText} maxLength={6000} disabled={busy} onChange={(e) => updateOld(e.target.value)} placeholder="Paste the first version here..." />
       <div className="compare-meta">{oldText.length.toLocaleString()} / 6,000</div>
       <div className="compare-arrow" aria-hidden="true"><ArrowRight size={18} /><span>UPDATED TO</span></div>
@@ -94,17 +95,17 @@ export default function CompareWorkspace({saveButton}: {saveButton: (input: Plan
       <p className="privacy-note">{mode === 'device' ? 'If the local model is unavailable, comparison stops.' : 'Automatic mode may send both notices to Gemini in the cloud.'}</p>
       {error && <div className="error-box" role="alert">{error}</div>}
       <button className="generate-button" disabled={!canCompare} onClick={run}><GitCompareArrows size={18} /> {busy ? (mode === 'device' && progress !== null ? `Preparing device model ${Math.round(progress * 100)}%` : 'Checking for changes…') : 'Compare notices'} <ArrowRight size={18} /></button>
-      {!isConfigured && <p className="config-note">Add Firebase and App Check values to <code>.env</code> for a live comparison.</p>}
+      {!isConfigured && <p className="config-note">Live AI is awaiting setup. Exact text changes are available on this device.</p>}
     </div>
-    <div className="result-card compare-result" aria-live="polite" aria-busy={busy}>
-      <div className="card-heading result-heading"><div className="card-icon teal"><GitCompareArrows size={19} /></div><div><span className="card-step">02 / THE CHANGES</span><h3>What’s different</h3></div>{comparison && <div className="result-actions"><button className="icon-button" onClick={copy} title="Copy comparison" aria-label="Copy comparison">{copied ? <Check size={18} /> : <Clipboard size={18} />}</button><button className="icon-button" onClick={() => downloadComparison(comparison, source)} title="Download comparison" aria-label="Download comparison"><ArrowDownToLine size={18} /></button></div>}</div>
+    <div className="result-card compare-result" id="revision-brief" aria-live="polite" aria-busy={busy}>
+      <div className="card-heading result-heading"><GitCompareArrows size={19}/><h2>Revision brief</h2>{comparison && <div className="result-actions"><button className="icon-button" onClick={copy} title="Copy comparison" aria-label="Copy comparison">{copied ? <Check size={18} /> : <Clipboard size={18} />}</button><button className="icon-button" onClick={() => downloadComparison(comparison, source)} title="Download comparison" aria-label="Download comparison"><ArrowDownToLine size={18} /></button></div>}</div>
       {comparison ? <>
         <div className={`source-chip ${source === 'ON_DEVICE' ? 'device' : source === 'IN_CLOUD' ? 'cloud' : ''}`}>{source === 'SAMPLE' ? <Sparkles size={14} /> : source === 'ON_DEVICE' ? <LockKeyhole size={14} /> : source === 'IN_CLOUD' ? <Cloud size={14} /> : <Info size={14} />}{sourceNames[source]}</div>
         <h4 className="brief-title">{comparison.headline}</h4><p className="brief-summary">{comparison.summary || 'Review both notices for changes.'}</p>
         <div className="compare-count"><strong>{comparison.changes.length}</strong><span>meaningful {comparison.changes.length === 1 ? 'change' : 'changes'} found</span></div>
-        {comparison.changes.length ? <div className="change-list">{comparison.changes.map((change, index) => <article className="change-card" key={`${index}-${change.impact}`}><div className="change-top"><span className={`change-kind ${change.kind}`}>{change.kind}</span><strong>{change.impact}</strong></div><div className="change-pair">{change.before && <div><small>BEFORE</small><p>{change.before}</p></div>}{change.after && <div><small>AFTER</small><p>{change.after}</p></div>}</div><details><summary>See evidence from both notices <ChevronDown size={13} /></summary>{change.beforeEvidence && <blockquote><b>Old:</b> {change.beforeEvidence}</blockquote>}{change.afterEvidence && <blockquote><b>New:</b> {change.afterEvidence}</blockquote>}</details>{change.kind !== 'removed' && saveButton({task: change.impact, notice: comparison.headline, evidence: change.afterEvidence, origin: sourceNames[source]})}</article>)}</div> : <p className="empty-line">No supported changes found. Read both originals to confirm.</p>}
+        {comparison.changes.length ? <div className="change-list">{comparison.changes.map((change, index) => <article className="change-card" key={`${index}-${change.impact}`}><div className="change-top"><span className={`change-kind ${change.kind}`}>{change.kind}</span><strong>{change.impact}</strong></div><div className="change-pair">{change.before && <div><small>BEFORE</small><p>{change.before}</p></div>}{change.after && <div><small>AFTER</small><p>{change.after}</p></div>}</div>{change.beforeEvidence && <SourceExcerpt original={oldText} evidence={change.beforeEvidence} label="Original excerpt"/>}{change.afterEvidence && <SourceExcerpt original={newText} evidence={change.afterEvidence} label="Updated excerpt"/>}{change.kind !== 'removed' && saveButton({task: change.impact, notice: comparison.headline, evidence: change.afterEvidence, origin: sourceNames[source]})}</article>)}</div> : <p className="empty-line">No supported changes found. Read both originals to confirm.</p>}
         <div className="result-footnote"><Info size={14} /> For pasted text, unsupported quotes are filtered out. Review both originals before acting.</div>
-      </> : <div className="empty-result"><div className="empty-illustration"><GitCompareArrows size={38} /><Sparkles size={21} /></div><h4>Know what moved.</h4><p>Paste both versions to see changed dates, places, requirements, and instructions here.</p></div>}
+      </> : <div className="empty-result"><div className="empty-illustration"><GitCompareArrows size={38} /><Sparkles size={21} /></div><h4>Your revision brief will appear here.</h4><p>Paste both versions to see changed dates, places, requirements, and instructions here.</p></div>}
     </div>
   </div>;
 }

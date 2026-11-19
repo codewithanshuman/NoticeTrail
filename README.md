@@ -12,7 +12,7 @@ The starter includes a **clearly labeled, prewritten sample** so the interface c
 
 Paste a notice, select the sentence you need to act on, and choose **Save to My plan**. You can also save steps from a brief or a suggested change. **My plan** keeps the source excerpt and the origin of each saved item in this browser. Search, set a due date, or mark a task complete. **Export open deadlines** creates an all-day calendar file for open tasks with dates you have confirmed.
 
-In **Compare updates**, enter two versions and expand **Inspect exact text changes**. Additions and deletions appear locally, including before Firebase setup. The separate AI comparison explains which changes affect the reader.
+In **Compare**, enter two versions and expand **Inspect exact text changes**. Additions and deletions appear locally, including before Firebase setup. The separate AI comparison explains which changes affect the reader.
 
 ## Run locally
 
@@ -60,7 +60,7 @@ Firebase setup: [web hybrid guide](https://firebase.google.com/docs/ai-logic/hyb
 
 ## Contest project scope
 
-Created during the 2026 contest period. All application code and visual design in this repository were created for this project. Standard dependencies are Firebase, React, Vite, TypeScript, Lucide, and Inter via Google Fonts. The sample notices are fictional. This project is licensed under MIT. The visual palette uses Firebase's published yellow, orange, and red colors. Its app mark is original and is not the Firebase logo or an endorsement claim; see the [Firebase brand guidelines](https://firebase.google.com/brand-guidelines).
+Created during the 2026 contest period. All application code and visual design in this repository were created for this project. Standard dependencies are Firebase, React, Vite, TypeScript, Lucide, and jsdiff. The sample notices are fictional. This project is licensed under MIT. The visual palette uses Firebase's published yellow, orange, and red colors. Its app mark is original and is not the Firebase logo or an endorsement claim; see the [Firebase brand guidelines](https://firebase.google.com/brand-guidelines).
 
 ## Submission preparation
 
