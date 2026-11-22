@@ -1,22 +1,34 @@
-# NoticeTrail
+# NoticeTrail 2.0
 
-NoticeTrail turns dense everyday notices into plain-language action plans. It can also compare an original notice with an update to reveal changed dates, locations, and requirements. It is an installable Chrome web app built for the **#BuildHybridAI 2026** hackathon.
+NoticeTrail connects notices, source evidence, document versions, and personal actions in one workspace. A deterministic SVG world, connection graph, time machine, and action journey display the same facts and share selection.
 
-## Why hybrid AI fits
+## Use your own notices
 
-Many notices contain personal details, and users may have limited connectivity. NoticeTrail uses the Firebase AI Logic Hybrid Inference SDK in `PREFER_ON_DEVICE` mode to try Gemini Nano locally, then use Gemini in the cloud when the local model is unavailable. The **Device only** choice uses `ONLY_ON_DEVICE`; it never sends the notice to cloud AI. The app displays `response.inferenceSource` after every live response so the user can see what actually happened. The text and image inputs use Firebase AI Logic at runtime in [`src/firebase.ts`](src/firebase.ts). There is no separate AI API key in client code.
+1. Choose **Open your notice** and paste text or attach a TXT file.
+2. Choose **Build workspace** for hybrid AI extraction, or **Open text without AI** to select passages yourself.
+3. Select an object, inspect its supporting words, and save a useful step to **My journey**.
+4. Choose **Save on device** to persist the workspace and subsequent changes in IndexedDB.
+5. Add a revised notice and inspect it in **Time machine**.
+6. Review affected saved steps. Accept a matched update, explicitly choose its revised source, or keep the original for later review.
+7. Confirm a full date, including year, before exporting open steps to your calendar.
 
-The starter includes a **clearly labeled, prewritten sample** so the interface can be explored before Firebase is connected. This is not a simulated AI response. Live inference needs your own Firebase project and App Check configuration.
+The optional garden example uses two fictional, prewritten notices. It is labeled throughout and remains separate from live AI output.
 
-## Try the planner before connecting Firebase
+## Data and privacy
 
-Paste a notice, select the sentence you need to act on, and choose **Save to My plan**. You can also save steps from a brief or a suggested change. **My plan** keeps the source excerpt and the origin of each saved item in this browser. Search, set a due date, or mark a task complete. **Export open deadlines** creates an all-day calendar file for open tasks with dates you have confirmed.
+Each fact includes its kind, source quote, evidence status, obligation type, and original date wording when present. Relationships carry their own evidence. Text matching verifies that words occur in the notice; the reader must still check their interpretation. Screenshot-derived facts remain marked for review.
 
-In **Compare**, enter two versions and expand **Inspect exact text changes**. Additions and deletions appear locally, including before Firebase setup. The separate AI comparison explains which changes affect the reader.
+Unchanged facts retain identities. Wording changes that cannot be matched confidently require manual source matching. Accepted revisions preserve task identity and completion, and clear the previous confirmed date. Steps awaiting review are excluded from calendar export.
+
+Workspaces start in memory. **Save on device** enables local persistence, including source text, images, versions, tasks, and review history. Delete workspace removes that complete record. Earlier standalone tasks remain available independently. Export workspace downloads a JSON copy.
+
+Automatic inference tries the device and may send notice content and questions to cloud AI. Device-only requests stop if local inference is unavailable. Firebase credentials and App Check configuration are still needed to test the live integration in this project.
+
+Supported inputs are text, TXT up to 30 KB and 12,000 characters, and PNG/JPEG up to 8 MB. The graph is bounded to 24 objects with paginated rendering. PDF extraction is a future extension.
 
 ## Run locally
 
-1. Install Node.js 20.19+ or 22.12+.
+1. Install Node.js 22.12 or newer.
 2. Run `npm install`.
 3. Copy `.env.example` to `.env`.
 4. Create a Firebase project and a web app. In **AI Services → AI Logic**, select the Gemini Developer API and complete its setup. Check **Security → App Check → APIs** and confirm enforcement for Firebase AI Logic.
@@ -40,29 +52,10 @@ The Vite `VITE_*` values are compiled into the browser bundle. Firebase web conf
 
 Firebase setup: [web hybrid guide](https://firebase.google.com/docs/ai-logic/hybrid/web/get-started) · [App Check](https://firebase.google.com/docs/app-check/web/recaptcha-enterprise-provider) · [hybrid structured output](https://firebase.google.com/docs/ai-logic/hybrid/web/generate-structured-output)
 
-## Product behavior
+## Development checks
 
-- Paste text, add a TXT file (up to 12,000 characters), or add a PNG/JPEG screenshot up to 8 MB.
-- Structured output captures a summary, actions, dates, and unanswered questions.
-- Each action and date includes an excerpt from the source notice for review. For pasted text, the app filters out action and date items whose quoted evidence does not occur in the input.
-- Compare two pasted text notices and receive changed, added, or removed items with evidence from both versions. Unsupported comparisons are filtered out in the browser.
-- Check off steps in the current session, copy the brief, or download it as a TXT file.
-- Once visited in a production build, the app shell is cached for offline reload. Local AI inference still depends on Chrome's on-device model and any Firebase App Check requirements being ready.
-- Unsaved notices and results stay in browser memory. Saving a step stores its task, notice title, source excerpt, and origin in local IndexedDB until removed; there is no account or server sync. Automatic mode **can** send notice content to the Gemini cloud model through Firebase AI Logic.
-- The model is instructed to avoid invented dates and actions, but results still need human review.
+Run npm test for evidence, extraction, and revision regression cases. Run npm run build for TypeScript, the production bundle, and the generated offline cache manifest. Browser operations still depend on their required AI and App Check services being ready.
 
-## Limits and next build targets
+The main shell is src/App.tsx. Shared models are in src/domain.ts, extraction validation in src/factValidation.ts, revision logic in src/trailEngine.ts, and persistence in src/workspaceStore.ts. src/WorldView.tsx renders the interactive world. Legacy task storage remains accessible through the earlier planner.
 
-- Chrome's on-device Prompt API currently needs a supported desktop Chrome version, flags, and enough storage. On-device inference is single-turn text or text-and-image; this app uses exactly those capabilities.
-- Firebase credentials and an App Check site key are needed to verify live inference. They are intentionally absent from this repository.
-- Next: connect a Firebase project and capture both inference paths in a demo; validate the live flow on a compatible Chrome desktop; port the brief schema and design to Android or iOS for a stronger multi-platform submission.
-- A hackathon submission also needs a public GitHub/GitLab repository, hosted app, English demo video (at most 3 minutes), and Devpost description.
-
-## Contest project scope
-
-Created during the 2026 contest period. All application code and visual design in this repository were created for this project. Standard dependencies are Firebase, React, Vite, TypeScript, Lucide, and jsdiff. The sample notices are fictional. This project is licensed under MIT. The visual palette uses Firebase's published yellow, orange, and red colors. Its app mark is original and is not the Firebase logo or an endorsement claim; see the [Firebase brand guidelines](https://firebase.google.com/brand-guidelines).
-
-## Submission preparation
-
-- [`docs/DEMO.md`](docs/DEMO.md) is a short video shot list. Capture live inference only after verifying the Firebase project.
-- [`docs/SUBMISSION.md`](docs/SUBMISSION.md) contains a Devpost description draft and remaining submission tasks.
+Built with React, TypeScript, Vite, Firebase AI Logic, Lucide, and jsdiff. Fonts are DM Sans and Instrument Serif with system fallbacks. The app mark is original. Application code and fictional sample notices are included under the MIT license.

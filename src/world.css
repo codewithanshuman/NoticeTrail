@@ -1,0 +1,109 @@
+.world-view {
+  --world-ink: #343b35;
+  --world-muted: #6a7468;
+  --world-border: #dedfd2;
+  position: relative;
+  background: #f6f7ef;
+  border: 1px solid var(--world-border);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.world-toolbar, .world-bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  color: var(--world-muted);
+  background: #fafbf5;
+}
+
+.world-toolbar { border-bottom: 1px solid var(--world-border) }
+.world-toolbar p, .world-bottom p { margin: 0; font-size: 12px; line-height: 1.5 }
+.world-toolbar p { color: var(--world-ink); font-weight: 600 }
+.world-toolbar p span { color: var(--world-muted); font-weight: 400 }
+.world-camera, .world-pages { display: flex; align-items: center; gap: 4px; flex: none }
+.world-camera button, .world-pages button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--world-border);
+  border-radius: 7px;
+  background: #fffef9;
+  color: #596656;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.world-camera button:disabled, .world-pages button:disabled { opacity: .35; cursor: default }
+.world-camera span { min-width: 43px; text-align: center; font: 11px ui-monospace, monospace }
+.world-pages span { min-width: 45px; text-align: center; font-size: 12px }
+.world-camera button:last-child { margin-left: 5px }
+.world-camera button:hover:not(:disabled), .world-pages button:hover:not(:disabled) { background: #e9ecdf }
+.world-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1000 / 640;
+  min-height: 340px;
+  max-height: 590px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  overflow: hidden;
+}
+.world-canvas:active { cursor: grabbing }
+.world-object { cursor: pointer; transition: transform 160ms ease; outline: none }
+.world-object:hover, .world-object:focus-visible, .world-object.is-selected { transform: translateY(-7px) }
+.world-halo { fill: transparent; stroke: transparent; stroke-width: 2; transition: fill 160ms ease, stroke 160ms ease }
+.world-ground { fill: #dce4cd; stroke: #c2d1b6; stroke-width: 1.5 }
+.world-object:hover .world-halo { fill: #e6c8a448 }
+.world-object.is-selected .world-halo { fill: #e7c9a158; stroke: #b27547; stroke-dasharray: 5 5 }
+.world-object:focus-visible .world-halo { stroke: #94603b; stroke-width: 3 }
+.world-object.is-complete .world-ground { fill: #c5d9bd; stroke: #89a47d }
+.world-kind { fill: #637363; text-transform: uppercase; font: 600 10px 'Segoe UI', sans-serif; letter-spacing: 1.5px }
+.world-title { fill: #334034; font: 600 14px 'Segoe UI', sans-serif; pointer-events: none }
+.world-edge { cursor: pointer; outline: none }
+.world-edge-hit { fill: none; stroke: transparent; stroke-width: 28 }
+.world-road { stroke: #ddd7bf; stroke-width: 16; fill: none; pointer-events: none }
+.world-road-center { stroke: #f8f5e4; stroke-width: 2; stroke-dasharray: 5 9; fill: none; pointer-events: none }
+.world-edge.is-active .world-road, .world-edge:hover .world-road, .world-edge:focus-visible .world-road { stroke: #d3ae7e }
+.world-edge:focus-visible .world-road { stroke: #a76c48 }
+.world-edge-label { fill: #697168; font: 11px 'Segoe UI', sans-serif }
+.world-bottom { border-top: 1px solid var(--world-border); padding-top: 10px; padding-bottom: 10px }
+.world-legend-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; background: #8c9b7d }
+.world-card { fill: #fffef9; stroke: #cbd5c4; stroke-width: 1.5; filter: drop-shadow(0 3px 2px #35432e09) }
+.world-object.is-selected .world-card, .world-object:focus-visible .world-card { stroke: #a97047; stroke-width: 2.5 }
+.world-object.is-complete .world-card { fill: #f0f7e9 }
+.connection-view .world-road { stroke-width: 2; stroke: #abbda7 }
+.connection-view .world-road-center { display: none }
+.connection-view .world-edge.is-active .world-road, .connection-view .world-edge:hover .world-road { stroke: #a56842; stroke-width: 3 }
+.world-relation { padding: 16px 20px; background: #fff5df; border-top: 1px solid #dfcba6 }
+.world-relation strong { color: #84532f; font-size: 13px; text-transform: capitalize }
+.world-relation p { color: #5f5b4d; font-size: 14px; line-height: 1.6; margin: 7px 0 12px }
+.world-relation > div { display: flex; gap: 8px; flex-wrap: wrap }
+.world-relation button { padding: 7px 10px; border: 1px solid #cdbb98; border-radius: 6px; background: #fffdf5; font-size: 12px; color: #704b2d; cursor: pointer }
+.world-object-list { padding: 12px 18px; border-top: 1px solid var(--world-border); margin: 0; background: #fafbf5 }
+.world-object-list summary { color: #5c6856; font-size: 12px; cursor: pointer }
+.world-object-list > div { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; margin-top: 12px }
+.world-object-list button { padding: 11px; text-align: left; font: inherit; font-size: 13px; color: #354333; background: #fffef8; border: 1px solid #d9dfcf; border-radius: 8px; cursor: pointer; overflow-wrap: anywhere }
+.world-object-list button span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #7b856f; margin-bottom: 4px }
+.world-object-list button small { display: inline-block; font-size: 10px; background: #e8eddc; padding: 3px 5px; margin: 5px 5px 0 0; border-radius: 3px }
+.world-object-list button[aria-pressed=true] { border-color: #b77b4d; background: #fff3df }
+.world-empty { background: #f4f6ec; padding: 55px 28px; border: 1px solid #dee4d3; border-radius: 15px; text-align: center }
+.world-empty h3 { margin: 0 0 10px; font-size: 22px; color: #44533e }
+.world-empty p { color: #6b7565; font-size: 15px; line-height: 1.6; max-width: 450px; margin: auto }
+@media(max-width:600px) {
+  .world-toolbar { flex-wrap: wrap; gap: 8px; padding: 12px }
+  .world-toolbar p span { display: none }
+  .world-canvas { min-height: 320px; max-height: 400px }
+  .world-bottom { padding: 10px 12px }
+  .world-object-list > div { grid-template-columns: 1fr }
+  .world-object-list { padding: 12px }
+}
+@media(prefers-reduced-motion:reduce) {
+  .world-object, .world-halo { transition: none }
+}

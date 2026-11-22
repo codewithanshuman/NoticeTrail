@@ -2,7 +2,7 @@ const name = 'noticetrail-shell-__VERSION__';
 const files = /* FILES */ [];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(name).then(cache => cache.addAll(files.map(url => new Request(url, { cache: 'reload' })))));
+  event.waitUntil(caches.open(name).then(cache => cache.addAll(files.map(url => new Request(url, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {

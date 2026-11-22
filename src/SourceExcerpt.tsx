@@ -1,9 +1,11 @@
+import { indexNotice } from './evidence';
+
 type Props = { evidence: string; original: string; label?: string };
 
 export default function SourceExcerpt({ evidence, original, label = 'Source excerpt' }: Props) {
-  const quote = evidence.trim().replace(/^[“"]|[”"]$/g, '');
-  const start = quote ? original.indexOf(quote) : -1;
-  const end = start + quote.length;
+  const match = indexNotice(original)(evidence);
+  const start = match?.start ?? -1;
+  const end = match?.end ?? 0;
   const before = original.slice(0, Math.max(start, 0));
   const after = original.slice(end);
   const prefix = before.length > 60 ? '… ' + before.slice(-60).replace(/^\S*\s/, '') : before;

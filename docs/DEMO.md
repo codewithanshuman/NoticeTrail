@@ -1,21 +1,15 @@
-# Demo video shot list (target: 2 minutes 30 seconds)
+# NoticeTrail demonstration
 
-Record the finished app on Chrome desktop. Use an example notice with invented names and addresses. Keep the video in English or add English subtitles.
+Use fictional notices and label the optional garden example as prewritten. Record live AI only after Firebase and App Check are configured and verified.
 
-| Time | Show | Narration idea |
-| --- | --- | --- |
-| 0:00–0:15 | A dense fictional community notice and NoticeTrail home | "Everyday notices hide the next step in a wall of text." |
-| 0:15–0:45 | Paste notice, choose Automatic, run live analysis | "NoticeTrail uses Firebase AI Logic to try on-device inference, with cloud fallback when needed." |
-| 0:45–1:15 | Open the brief; expand source excerpts; check off an action | "Each action is tied to text in the original notice, so I can verify it." |
-| 1:15–1:40 | Show the actual inference source badge | "The app reports where this response ran." Say the source the SDK actually returns. |
-| 1:40–2:05 | Open Compare and run a live comparison | "When a revised notice arrives, the app shows what changed and quotes both versions." |
-| 2:05–2:25 | Show Device only and the actual source badge; download a result | "For sensitive content, this option prevents cloud AI fallback." If the local model is unavailable, demonstrate the honest error state instead. |
-| 2:25–2:30 | Closing screen | "NoticeTrail: make the next step clear." |
+| Time | Show |
+| --- | --- |
+| 0:00–0:20 | Open a notice and explain the reader's task. |
+| 0:20–0:50 | Build the world with live hybrid inference and show the reported inference source. |
+| 0:50–1:15 | Select an event, open the evidence, and follow a supported connection. |
+| 1:15–1:40 | Save an action to the journey and confirm its complete calendar date. |
+| 1:40–2:15 | Add a revision, inspect the differences, and review the affected action. |
+| 2:15–2:40 | Accept the update, reconfirm the date, save, reload, and export the calendar. |
+| 2:40–2:55 | Show the privacy choice and its device-only behavior. |
 
-## Capture checklist
-
-- Confirm Firebase AI Logic and App Check are configured and enforced.
-- Confirm a real call returned a brief before recording; do not film the prewritten sample as a live model output.
-- To show both inference paths, use separate controlled runs and state which path the badge actually reports.
-- Show the app functioning in Chrome, source excerpts, and the privacy choice.
-- Keep total length under three minutes, upload to public YouTube, and use the URL in Devpost.
+Public hosting and live device/cloud verification remain required before submission.

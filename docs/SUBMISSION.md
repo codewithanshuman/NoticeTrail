@@ -2,15 +2,15 @@
 
 ## One-line pitch
 
-NoticeTrail turns dense notices into clear next steps and compares updates, with a visible choice between private on-device AI and hybrid cloud fallback.
+NoticeTrail turns notices into an explorable world of facts, evidence, revisions, and actions, with hybrid on-device and cloud AI.
 
 ## What it does
 
-People receive school, community, and workplace notices that bury important details in long paragraphs. NoticeTrail accepts pasted text, a TXT file, or a screenshot and creates a short summary, action checklist, key dates, and questions to ask. Its comparison workflow reads an original and an updated notice, then flags changed, added, and removed requirements with excerpts from both. For pasted text, the app drops items whose quoted evidence does not match the input. Users can check off steps and export results.
+NoticeTrail accepts text, TXT files, and screenshots. A shared graph connects events, locations, requirements, deadlines, and unresolved questions. The world and connections views expose each fact and its evidence. The time machine tracks revisions. The action journey links saved steps to source versions so users can review changed obligations before updating their plans. Calendar exports require complete dates confirmed by the user. Workspaces can be saved locally, exported, and deleted. Earlier saved tasks remain accessible.
 
 ## How it uses Firebase AI Logic
 
-The Chrome web app imports and calls Firebase AI Logic directly in `src/firebase.ts` for both briefing and comparison. Each workflow creates a hybrid `GenerativeModel` with structured response schemas for both Chrome's on-device model and Gemini cloud fallback. Automatic mode uses `PREFER_ON_DEVICE`; Device only uses `ONLY_ON_DEVICE`. The app initializes the on-device model after a user click and reads `inferenceSource` from the model response to label the actual route. Firebase App Check protects the AI Logic integration. The source repository includes the full implementation and configuration instructions.
+The Chrome web app imports and calls Firebase AI Logic through `src/extractWorkspace.ts`, `src/assistant.ts`, and `src/firebase.ts` for extraction, questions, and comparison. Each workflow creates a hybrid `GenerativeModel` with structured response schemas for both Chrome's on-device model and Gemini cloud fallback. Automatic mode uses `PREFER_ON_DEVICE`; Device only uses `ONLY_ON_DEVICE`. The app initializes the on-device model after a user click and reads `inferenceSource` from the model response to label the actual route. Firebase App Check protects the AI Logic integration. The source repository includes the full implementation and configuration instructions.
 
 ## Why this matters
 

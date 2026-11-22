@@ -58,7 +58,6 @@ export default function CompareWorkspace({saveButton}: {saveButton: (input: Plan
   async function run() {
     if (!canCompare) return;
     setBusy(true);
-    setComparison(null);
     setProgress(null);
     setError('');
     try {
