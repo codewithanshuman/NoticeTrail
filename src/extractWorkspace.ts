@@ -83,8 +83,11 @@ export async function extractWorkspace(input: {
   const prompt = [
     'Extract a compact map of facts from this notice for its recipient. Return the requested JSON structure.',
     'Use at most 18 nodes and 20 edges. Prefer useful facts over repeated fragments. Each node key must be unique within the response.',
+    'Read the whole notice before extracting: identify its audience, exceptions, permissions and prohibitions. Then check each proposed fact against its supporting passage. Do not expose internal reasoning.',
     'Kinds: event for an explicitly scheduled occurrence; action for a task; deadline for a stated due date; requirement for an item, eligibility rule, or material to prepare; location for an explicit place; question for an unresolved question.',
     'Use a concise title and one sentence of description. Each fact except a question must include one exact, continuous quote that supports the entire fact. Quote the full conditional sentence when its condition matters.',
+    'Make each node one independently useful fact. Avoid several paraphrases of the same action. Keep titles under 180 characters and descriptions under 600 characters. Every number, contact detail and URL in either must occur in its quote.',
+    'Preserve negative instructions in both the title and description. “Not required”, “may not”, “only if” and “except” change the meaning. Never shorten these into a positive command. If a short phrase appears in several places, quote enough context to distinguish it.',
     'Do not invent people, requirements, events, dates, contact details, links, or dependencies. A person or organization can be included in a supported description rather than creating an unsupported node kind.',
     'Obligation must be required only when the notice explicitly requires the step. Use conditional when it applies only to a stated group or circumstance. Put the exact condition from the quote in condition. Use suggested for optional advice; never convert advice into an obligation.',
     'For ordinary descriptive events and places, use suggested unless attendance or visiting is explicitly mandatory. Do not infer that every announced event requires attendance.',

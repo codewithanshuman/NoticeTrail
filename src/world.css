@@ -1,109 +1,128 @@
 .world-view {
-  --world-ink: #343b35;
-  --world-muted: #6a7468;
-  --world-border: #dedfd2;
+  --world-ink: #242a35;
+  --world-muted: #626a77;
+  --world-border: #e0e3e8;
   position: relative;
-  background: #f6f7ef;
+  background: #f8fafc;
   border: 1px solid var(--world-border);
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
 }
-
 .world-toolbar, .world-bottom {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 18px;
+  gap: 16px;
+  padding: 16px 20px;
   color: var(--world-muted);
-  background: #fafbf5;
+  background: #fff;
 }
-
 .world-toolbar { border-bottom: 1px solid var(--world-border) }
-.world-toolbar p, .world-bottom p { margin: 0; font-size: 12px; line-height: 1.5 }
-.world-toolbar p { color: var(--world-ink); font-weight: 600 }
-.world-toolbar p span { color: var(--world-muted); font-weight: 400 }
+.world-toolbar p, .world-bottom p { margin: 0; font-size: .875rem; line-height: 1.55 }
+.world-toolbar p { color: var(--world-ink); font-weight: 650 }
+.world-toolbar p span { display: block; margin-top: 2px; color: var(--world-muted); font-weight: 400 }
 .world-camera, .world-pages { display: flex; align-items: center; gap: 4px; flex: none }
 .world-camera button, .world-pages button {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
   padding: 0;
   border: 1px solid var(--world-border);
-  border-radius: 7px;
-  background: #fffef9;
-  color: #596656;
+  border-radius: 8px;
+  background: #fff;
+  color: #424a58;
   display: grid;
   place-items: center;
-  cursor: pointer;
 }
-.world-camera button:disabled, .world-pages button:disabled { opacity: .35; cursor: default }
-.world-camera span { min-width: 43px; text-align: center; font: 11px ui-monospace, monospace }
-.world-pages span { min-width: 45px; text-align: center; font-size: 12px }
+.world-camera button:disabled, .world-pages button:disabled { opacity: .38; cursor: default }
+.world-camera span { min-width: 45px; text-align: center; font-size: .8125rem; font-variant-numeric: tabular-nums }
+.world-pages span { min-width: 46px; text-align: center; font-size: .875rem; font-variant-numeric: tabular-nums }
 .world-camera button:last-child { margin-left: 5px }
-.world-camera button:hover:not(:disabled), .world-pages button:hover:not(:disabled) { background: #e9ecdf }
+.world-camera button:hover:not(:disabled), .world-pages button:hover:not(:disabled) { background: #fff4e7; border-color: #efc99c }
 .world-canvas {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 1000 / 640;
-  min-height: 340px;
-  max-height: 590px;
+  min-height: 350px;
+  max-height: 650px;
   cursor: grab;
   touch-action: none;
   user-select: none;
   overflow: hidden;
 }
+.world-canvas:focus-visible { outline: 3px solid #b85c0b; outline-offset: -4px }
 .world-canvas:active { cursor: grabbing }
-.world-object { cursor: pointer; transition: transform 160ms ease; outline: none }
-.world-object:hover, .world-object:focus-visible, .world-object.is-selected { transform: translateY(-7px) }
+.world-object { cursor: pointer; outline: none }
 .world-halo { fill: transparent; stroke: transparent; stroke-width: 2; transition: fill 160ms ease, stroke 160ms ease }
-.world-ground { fill: #dce4cd; stroke: #c2d1b6; stroke-width: 1.5 }
-.world-object:hover .world-halo { fill: #e6c8a448 }
-.world-object.is-selected .world-halo { fill: #e7c9a158; stroke: #b27547; stroke-dasharray: 5 5 }
-.world-object:focus-visible .world-halo { stroke: #94603b; stroke-width: 3 }
-.world-object.is-complete .world-ground { fill: #c5d9bd; stroke: #89a47d }
-.world-kind { fill: #637363; text-transform: uppercase; font: 600 10px 'Segoe UI', sans-serif; letter-spacing: 1.5px }
-.world-title { fill: #334034; font: 600 14px 'Segoe UI', sans-serif; pointer-events: none }
+.world-ground { fill: #e5eadf; stroke: #bccab5; stroke-width: 1.5 }
+.world-object:hover .world-halo { fill: #f3b75d33 }
+.world-object.is-selected .world-halo { fill: #ffb84b33; stroke: #b85c0b; stroke-width: 3 }
+.world-object:focus-visible .world-halo { fill: #ffb84b22; stroke: #723e0f; stroke-width: 4; stroke-dasharray: 5 4 }
+.world-object.is-complete .world-ground { fill: #d2e5d6; stroke: #71997c }
+.world-kind { fill: #5b6572; font: 650 14px 'DM Sans', 'Segoe UI', sans-serif; letter-spacing: .5px }
+.world-title { fill: #27313c; font: 600 20px 'DM Sans', 'Segoe UI', sans-serif; pointer-events: none }
 .world-edge { cursor: pointer; outline: none }
-.world-edge-hit { fill: none; stroke: transparent; stroke-width: 28 }
-.world-road { stroke: #ddd7bf; stroke-width: 16; fill: none; pointer-events: none }
-.world-road-center { stroke: #f8f5e4; stroke-width: 2; stroke-dasharray: 5 9; fill: none; pointer-events: none }
-.world-edge.is-active .world-road, .world-edge:hover .world-road, .world-edge:focus-visible .world-road { stroke: #d3ae7e }
-.world-edge:focus-visible .world-road { stroke: #a76c48 }
-.world-edge-label { fill: #697168; font: 11px 'Segoe UI', sans-serif }
-.world-bottom { border-top: 1px solid var(--world-border); padding-top: 10px; padding-bottom: 10px }
-.world-legend-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; background: #8c9b7d }
-.world-card { fill: #fffef9; stroke: #cbd5c4; stroke-width: 1.5; filter: drop-shadow(0 3px 2px #35432e09) }
-.world-object.is-selected .world-card, .world-object:focus-visible .world-card { stroke: #a97047; stroke-width: 2.5 }
-.world-object.is-complete .world-card { fill: #f0f7e9 }
-.connection-view .world-road { stroke-width: 2; stroke: #abbda7 }
+.world-edge-hit { fill: none; stroke: transparent; stroke-width: 30 }
+.world-road { stroke: #e4dacc; stroke-width: 13; fill: none; pointer-events: none }
+.world-road-center { stroke: #fffaf3; stroke-width: 2; stroke-dasharray: 5 9; fill: none; pointer-events: none }
+.world-edge.is-active .world-road, .world-edge:hover .world-road { stroke: #d2a466 }
+.world-edge:focus-visible .world-road, .world-edge.is-selected .world-road { stroke: #a3570e }
+.world-edge-label { fill: #4d5763; font: 500 14px 'DM Sans', 'Segoe UI', sans-serif }
+.world-edge-label-bg { fill: #fff; stroke: #e0e3e8; stroke-width: 1 }
+.world-edge.is-selected .world-edge-label-bg { fill: #fff2df; stroke: #be731c }
+.world-bottom { border-top: 1px solid var(--world-border); padding-top: 12px; padding-bottom: 12px }
+.world-bottom p { font-size: .8125rem }
+.world-card { fill: #fff; stroke: #cfd5dc; stroke-width: 1.5; filter: drop-shadow(0 4px 4px #1b25300b) }
+.world-object:hover .world-card { stroke: #ce9d61 }
+.world-object.is-selected .world-card { fill: #fffcf6; stroke: #b85c0b; stroke-width: 3 }
+.world-object:focus-visible .world-card { stroke: #723e0f; stroke-width: 4; stroke-dasharray: 6 4 }
+.world-object.is-complete .world-card { fill: #f2faf3 }
+.connection-view .world-road { stroke-width: 2.5; stroke: #aeb9c6 }
 .connection-view .world-road-center { display: none }
-.connection-view .world-edge.is-active .world-road, .connection-view .world-edge:hover .world-road { stroke: #a56842; stroke-width: 3 }
-.world-relation { padding: 16px 20px; background: #fff5df; border-top: 1px solid #dfcba6 }
-.world-relation strong { color: #84532f; font-size: 13px; text-transform: capitalize }
-.world-relation p { color: #5f5b4d; font-size: 14px; line-height: 1.6; margin: 7px 0 12px }
+.connection-view .world-edge.is-active .world-road, .connection-view .world-edge:hover .world-road { stroke: #b97121; stroke-width: 3.5 }
+.connection-view .world-edge:focus-visible .world-road, .connection-view .world-edge.is-selected .world-road { stroke: #8b4404; stroke-width: 4 }
+.world-relation { padding: 20px; background: #fff7eb; border-top: 1px solid #efd4ae; scroll-margin: 20px }
+.world-relation-caption { display: block; margin-bottom: 8px; font-size: .75rem; letter-spacing: .08em; font-weight: 650; color: #88521b }
+.world-relation strong { display: block; color: #653f18; font-size: 1rem; text-transform: capitalize }
+.world-relation p { color: #4b4540; font-size: 1rem; line-height: 1.7; margin: 10px 0 16px; overflow-wrap: anywhere }
 .world-relation > div { display: flex; gap: 8px; flex-wrap: wrap }
-.world-relation button { padding: 7px 10px; border: 1px solid #cdbb98; border-radius: 6px; background: #fffdf5; font-size: 12px; color: #704b2d; cursor: pointer }
-.world-object-list { padding: 12px 18px; border-top: 1px solid var(--world-border); margin: 0; background: #fafbf5 }
-.world-object-list summary { color: #5c6856; font-size: 12px; cursor: pointer }
-.world-object-list > div { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; margin-top: 12px }
-.world-object-list button { padding: 11px; text-align: left; font: inherit; font-size: 13px; color: #354333; background: #fffef8; border: 1px solid #d9dfcf; border-radius: 8px; cursor: pointer; overflow-wrap: anywhere }
-.world-object-list button span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #7b856f; margin-bottom: 4px }
-.world-object-list button small { display: inline-block; font-size: 10px; background: #e8eddc; padding: 3px 5px; margin: 5px 5px 0 0; border-radius: 3px }
-.world-object-list button[aria-pressed=true] { border-color: #b77b4d; background: #fff3df }
-.world-empty { background: #f4f6ec; padding: 55px 28px; border: 1px solid #dee4d3; border-radius: 15px; text-align: center }
-.world-empty h3 { margin: 0 0 10px; font-size: 22px; color: #44533e }
-.world-empty p { color: #6b7565; font-size: 15px; line-height: 1.6; max-width: 450px; margin: auto }
+.world-relation button { padding: 9px 12px; min-height: 40px; border: 1px solid #dfbf97; border-radius: 8px; background: #fff; font-size: .875rem; color: #704719 }
+.world-object-list, .world-connection-list { padding: 16px 20px; border-top: 1px solid var(--world-border); margin: 0; background: #fff }
+.world-object-list summary, .world-connection-list summary { color: #424e5d; font-size: .875rem; font-weight: 600; cursor: pointer; line-height: 1.6 }
+.world-connection-list summary small { display: inline-block; margin-left: 10px; font-weight: 400; font-size: .8125rem; color: #68717d }
+.world-object-list > div, .world-connection-list > div { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 16px }
+.world-object-list button, .world-connection-list button { display: block; padding: 14px; text-align: left; font: inherit; font-size: .875rem; color: #303947; background: #fff; border: 1px solid #dfe3e8; border-radius: 10px; overflow-wrap: anywhere }
+.world-object-list button strong { display: block; font-size: .9375rem; font-weight: 550; line-height: 1.55 }
+.world-object-list button .object-list-kind { display: block; font-size: .75rem; font-weight: 600; color: #657080; margin-bottom: 6px }
+.world-object-list button .object-list-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px }
+.world-object-list button .object-list-meta:empty { display: none }
+.world-object-list button small { display: inline-block; font-size: .75rem; background: #edf4ee; color: #385b3e; padding: 3px 7px; border-radius: 5px; line-height: 1.5 }
+.world-object-list button small.needs-review { color: #7a4809; background: #fff0cf }
+.world-object-list button[aria-pressed=true], .world-connection-list button[aria-pressed=true] { border-color: #c27b2d; background: #fffbf4; box-shadow: inset 3px 0 #c27b2d }
+.world-connection-list button strong { display: block; font-size: .8125rem; font-weight: 650; color: #875218; margin-bottom: 7px; text-transform: capitalize }
+.world-connection-list button span { display: block; font-size: .875rem; line-height: 1.6 }
+.world-connection-list button .connection-target { margin-top: 7px; padding-top: 7px; border-top: 1px solid #e9ebef; color: #606a76 }
+.world-connection-list > p { font-size: .9375rem; line-height: 1.7; color: #606a76; margin: 12px 0 0 }
+.world-empty { background: #fff; padding: 55px 28px; border: 1px solid #e0e3e8; border-radius: 16px; text-align: center }
+.world-empty h3 { margin: 0 0 12px; font-size: 1.375rem; color: #303947 }
+.world-empty p { color: #646e7b; font-size: 1rem; line-height: 1.7; max-width: 450px; margin: auto }
 @media(max-width:600px) {
-  .world-toolbar { flex-wrap: wrap; gap: 8px; padding: 12px }
-  .world-toolbar p span { display: none }
-  .world-canvas { min-height: 320px; max-height: 400px }
-  .world-bottom { padding: 10px 12px }
-  .world-object-list > div { grid-template-columns: 1fr }
-  .world-object-list { padding: 12px }
+  .world-toolbar { flex-wrap: wrap; gap: 12px; padding: 16px }
+  .world-toolbar p { font-size: .875rem }
+  .world-toolbar p span { font-size: .8125rem }
+  .world-camera { margin-left: auto }
+  .world-canvas { aspect-ratio: 600 / 640; min-height: 330px; max-height: 520px; touch-action: pan-y pinch-zoom }
+  .world-canvas.is-zoomed { touch-action: none }
+  .world-kind { font-size: 17px }
+  .world-title { font-size: 21px }
+  .world-bottom { padding: 12px 16px; gap: 8px }
+  .world-bottom p { font-size: .8125rem; max-width: 190px }
+  .world-object-list > div, .world-connection-list > div { grid-template-columns: 1fr }
+  .world-object-list, .world-connection-list, .world-relation { padding: 16px }
+  .world-object-list button { min-height: 74px }
+  .world-connection-list summary small { display: block; margin-left: 0 }
 }
-@media(prefers-reduced-motion:reduce) {
-  .world-object, .world-halo { transition: none }
-}
+@media(prefers-reduced-motion:reduce) { .world-halo { transition: none } }

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { indexNotice } from '../src/evidence.ts';
-import { acceptImpact, createDemoWorkspace, graphFromBrief, impacts, saveNode } from '../src/trailEngine.ts';
+import { acceptImpact, createDemoWorkspace, factChanges, graphFromBrief, impacts, keepImpact, matchImpact, saveNode } from '../src/trailEngine.ts';
 
 const brief = fields => ({title:'Notice', summary:'', actions:[], dates:[], questions:[], ...fields});
 
@@ -33,7 +33,7 @@ test('saving the same logical fact in two versions creates one journey task', ()
   assert.equal(workspace.tasks.length,0);
 });
 
-test('accepting an earlier deadline retains task identity and completion while clearing the confirmed date', () => {
+test('accepting changed source retains task identity but reopens completion and clears the confirmed date', () => {
   let workspace = saveNode(createDemoWorkspace(),'garden-agreement','garden-original');
   workspace = {...workspace,tasks:workspace.tasks.map(task => ({...task,done:true,due:'2027-04-17'}))};
   const impact = impacts(workspace)[0];
@@ -42,12 +42,62 @@ test('accepting an earlier deadline retains task identity and completion while c
   assert.match(impact.next.quote,/April 16/);
   const updated = acceptImpact(workspace,workspace.tasks[0].id);
   assert.equal(updated.tasks[0].id,workspace.tasks[0].id);
-  assert.equal(updated.tasks[0].done,true);
+  assert.equal(updated.tasks[0].done,false);
   assert.equal(updated.tasks[0].due,'');
   assert.equal(updated.tasks[0].versionId,'garden-updated');
   assert.equal(updated.reviews[0].decision,'accepted');
   assert.deepEqual(impacts(updated),[]);
   assert.equal(workspace.tasks[0].due,'2027-04-17');
+});
+
+test('keeping a reviewed step preserves its provenance and settles only that revision', () => {
+  let workspace = saveNode(createDemoWorkspace(),'garden-agreement','garden-original');
+  workspace = {...workspace,tasks:workspace.tasks.map(task => ({...task,done:true,due:'2026-04-17'}))};
+  const kept = keepImpact(workspace, workspace.tasks[0].id);
+  assert.equal(kept.tasks[0].versionId, 'garden-original');
+  assert.equal(kept.tasks[0].done, true);
+  assert.equal(kept.tasks[0].due, '2026-04-17');
+  assert.equal(kept.tasks[0].reviewVersionId, 'garden-updated');
+  assert.deepEqual(impacts(kept), []);
+  assert.equal(keepImpact(kept, kept.tasks[0].id), kept, 'a second click cannot duplicate the review');
+  const newer = {...kept.versions.at(-1), id:'garden-third'};
+  assert.equal(impacts({...kept, versions:[...kept.versions,newer]}).length, 1);
+});
+
+test('old keep-for-now log entries alone do not silently settle an unreviewed step', () => {
+  const workspace = saveNode(createDemoWorkspace(),'garden-agreement','garden-original');
+  const legacy = {...workspace, reviews:[{id:'legacy',taskId:workspace.tasks[0].id,versionId:'garden-updated',decision:'kept',created:0}]};
+  assert.equal(impacts(legacy).length, 1);
+});
+
+test('explicit source matching validates target and prevents duplicate saved steps', () => {
+  let workspace = saveNode(createDemoWorkspace(),'garden-agreement','garden-original');
+  const id = workspace.tasks[0].id;
+  assert.equal(matchImpact(workspace,id,'missing'),workspace);
+  assert.equal(matchImpact(workspace,id,'garden-location'),workspace);
+  workspace = saveNode(workspace,'garden-bring','garden-updated');
+  assert.equal(matchImpact(workspace,id,'garden-bring'),workspace);
+  workspace = {...workspace,tasks:workspace.tasks.map(task => task.id === id ? {...task,done:true,due:'2026-04-17'} : task)};
+  const matched = matchImpact(workspace,id,'garden-alternative');
+  assert.equal(matched.tasks[0].nodeId,'garden-alternative');
+  assert.equal(matched.tasks[0].versionId,'garden-updated');
+  assert.equal(matched.tasks[0].done,false);
+  assert.equal(matched.tasks[0].due,'');
+  assert.equal(matched.tasks[0].quote,workspace.versions.at(-1).nodes.find(node=>node.id==='garden-alternative').quote);
+});
+
+test('fact changes include conditions, dates, evidence status, and obligations but ignore typography', () => {
+  const original = createDemoWorkspace().versions[0].nodes[0];
+  assert.deepEqual(factChanges(original,{...original,title:'  '+original.title.toUpperCase()+'  '}),[]);
+  assert.deepEqual(factChanges(original,{...original,condition:'If attending',rawDate:'April 18',status:'needs_review',obligation:'conditional'}),
+    ['Date as written','Obligation','Condition','Evidence status']);
+});
+
+test('a changed obligation triggers review even when its source quotation is unchanged', () => {
+  const initial = createDemoWorkspace().versions[0];
+  const next = {...initial,id:'next',nodes:initial.nodes.map(node=>({...node,obligation:'suggested'}))};
+  const workspace = saveNode({id:'changes',title:'Changes',versions:[initial,next],tasks:[],reviews:[]},initial.nodes[0].id,initial.id);
+  assert.equal(impacts(workspace).length,1);
 });
 
 test('an unrelated version preserves the saved step and reports uncertainty', () => {
@@ -119,4 +169,24 @@ test('questions stay suggestions and cannot be saved as required journey steps',
   assert.equal(version.nodes[0].status,'needs_review');
   const workspace = {id:'test',title:'Test',versions:[version],tasks:[],reviews:[]};
   assert.equal(saveNode(workspace,version.nodes[0].id,version.id).tasks.length,0);
+});
+
+test('May dates remain required while omitted negation stays visibly unverified', () => {
+  const text = 'Submit the form by May 17. Do not pay a fee.';
+  const result = graphFromBrief(brief({actions:[
+    {task:'Submit the form',evidence:'Submit the form by May 17.'},
+    {task:'Pay a fee',evidence:'pay a fee'},
+  ]}),text,'ON_DEVICE');
+  assert.equal(result.nodes[0].obligation,'required');
+  assert.equal(result.nodes[1].status,'needs_review');
+  assert.match(result.nodes[1].quote,/Do not/);
+});
+
+test('legacy graph rejects literal inventions and passages repeated under conflicting conditions', () => {
+  const text = 'Pay 20 dollars. If attending, submit the form. Otherwise, do not submit the form.';
+  const result = graphFromBrief(brief({actions:[
+    {task:'Pay 200 dollars',evidence:'Pay 20 dollars.'},
+    {task:'Submit the form',evidence:'submit the form'},
+  ]}),text,'ON_DEVICE');
+  assert.deepEqual(result.nodes,[]);
 });

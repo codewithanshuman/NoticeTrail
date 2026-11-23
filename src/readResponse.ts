@@ -1,5 +1,5 @@
 import type { Brief, Change, Comparison } from './types';
-import { comparable, indexNotice } from './evidence.ts';
+import { comparable, indexNotice, unsupportedLiterals } from './evidence.ts';
 
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -37,9 +37,9 @@ export function readBrief(raw: string, original: string, image: boolean): Brief 
     return image ? evidence : locate(evidence)?.text ?? '';
   }
   const actions = value.actions.map(record).map(row => ({task: string(row.task), evidence: quote(row.evidence)}))
-    .filter(row => row.task && row.evidence);
+    .filter(row => row.task && row.evidence && !unsupportedLiterals(row.task, row.evidence).length);
   const dates = value.dates.map(record).map(row => ({date: string(row.date), meaning: string(row.meaning), evidence: quote(row.evidence)}))
-    .filter(row => row.date && row.meaning && row.evidence && indexNotice(row.evidence)(row.date));
+    .filter(row => row.date && row.meaning && row.evidence && indexNotice(row.evidence)(row.date) && !unsupportedLiterals(row.meaning, row.evidence).length);
   const partial = actions.length < value.actions.length || dates.length < value.dates.length;
   return {
     title: partial ? 'Reviewed notice' : string(value.title) || 'Your notice',
@@ -77,10 +77,13 @@ export function readComparison(raw: string, original: string, updated: string): 
     if (kind === 'added' && (before || oldEvidence || oldQuote(afterEvidence))) continue;
     if (kind === 'removed' && (after || newEvidence || newQuote(beforeEvidence))) continue;
     if (kind === 'changed' && comparable(beforeEvidence) === comparable(afterEvidence)) continue;
+    if (unsupportedLiterals(before, beforeEvidence).length || unsupportedLiterals(after, afterEvidence).length ||
+        unsupportedLiterals(impact, beforeEvidence + '\n' + afterEvidence).length) continue;
     changes.push({ kind, impact, before, after, beforeEvidence, afterEvidence });
   }
   const rows = unique(changes, row => JSON.stringify([row.kind, comparable(row.beforeEvidence), comparable(row.afterEvidence), comparable(row.impact)]), 12);
-  if (rows.length !== value.changes.length) return {
+  const support = rows.map(row => row.beforeEvidence + '\n' + row.afterEvidence).join('\n');
+  if (rows.length !== value.changes.length || unsupportedLiterals(string(value.headline) + ' ' + string(value.summary), support).length) return {
     headline: rows.length + (rows.length === 1 ? ' supported change' : ' supported changes'),
     summary: 'Review the excerpts alongside both originals to confirm the differences.',
     changes: rows,

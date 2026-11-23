@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { ArrowUpRight, MessageCircle } from 'lucide-react';
+import { LoaderCircle, MessageCircle, Send } from 'lucide-react';
 import type { Fact, Version } from './domain';
 import type { PrivacyMode, Source } from './types';
 import { answerQuestion, type NoticeAnswer } from './assistant';
@@ -41,10 +41,11 @@ type Props = { version: Version; selected?: Fact; mode: PrivacyMode };
 
 export default function AskPanel({ version, selected, mode }: Props) {
   const inputId = useId();
-  const scope = version.id + '/' + (selected?.id ?? '') + '/' + mode;
+  const scope = JSON.stringify([version.id, version.text, selected?.id, selected?.quote, mode]);
   const scopeRef = useRef(scope);
   scopeRef.current = scope;
   const requestId = useRef(0);
+  const activeRequest = useRef(false);
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState<NoticeAnswer | null>(null);
   const [asked, setAsked] = useState('');
@@ -55,17 +56,18 @@ export default function AskPanel({ version, selected, mode }: Props) {
 
   useEffect(() => {
     requestId.current++;
+    activeRequest.current = false;
     setAnswer(null);
     setAsked('');
     setError('');
     setBusy(false);
     setProgress(null);
-    return () => { requestId.current++; };
+    return () => { requestId.current++; activeRequest.current = false; };
   }, [scope]);
 
   async function ask(value: string) {
     const nextQuestion = value.trim();
-    if (busy || nextQuestion.length < 3 || !readable) return;
+    if (activeRequest.current || nextQuestion.length < 3 || nextQuestion.length > 500 || !readable) return;
     const demo = demonstration(nextQuestion, version);
     setQuestion(nextQuestion);
     setAsked(nextQuestion);
@@ -73,11 +75,12 @@ export default function AskPanel({ version, selected, mode }: Props) {
     if (demo) { setAnswer(demo); return; }
     if (!isConfigured) {
       setAnswer(null);
-      setError('Live questions need Firebase setup. The demonstration questions above work now.');
+      setError(version.source === 'SAMPLE' ? 'Live questions need Firebase setup. You can try the example questions above.' : 'Live questions need Firebase setup. Your notice and source excerpts are still available to read.');
       return;
     }
 
     const id = ++requestId.current;
+    activeRequest.current = true;
     const currentScope = scope;
     const stillCurrent = () => id === requestId.current && currentScope === scopeRef.current;
     setBusy(true);
@@ -89,13 +92,13 @@ export default function AskPanel({ version, selected, mode }: Props) {
         question: nextQuestion,
         selectedQuote: selected?.quote,
         mode,
-        onProgress: value => { if (stillCurrent()) setProgress(value); },
+        onProgress: value => { if (stillCurrent() && Number.isFinite(value)) setProgress(Math.min(1, Math.max(0, value))); },
       });
       if (stillCurrent()) setAnswer(result);
     } catch (cause) {
       if (stillCurrent()) setError(cause instanceof Error ? cause.message : 'Could not answer. Please try again.');
     } finally {
-      if (stillCurrent()) setBusy(false);
+      if (stillCurrent()) { activeRequest.current = false; setBusy(false); }
     }
   }
 
@@ -107,11 +110,12 @@ export default function AskPanel({ version, selected, mode }: Props) {
     </div>}
     {!readable ? <p>Questions need source text. Review this image and its excerpts in the evidence inspector.</p> : <>
       <form onSubmit={event => { event.preventDefault(); void ask(question); }}>
-        <label htmlFor={inputId}>Ask about the selected information</label>
+        <label htmlFor={inputId}>{selected ? 'Ask about this detail' : 'Ask about this notice'}</label>
         <div className="ask-input">
-          <input id={inputId} value={question} onChange={event => setQuestion(event.target.value)} maxLength={500} disabled={busy} placeholder="What does this mean for me?"/>
-          <button type="submit" disabled={busy || question.trim().length < 3} aria-label="Ask question"><ArrowUpRight size={18}/></button>
+          <input id={inputId} value={question} onChange={event => setQuestion(event.target.value)} maxLength={500} disabled={busy} aria-describedby={inputId + '-help'} placeholder="What does this mean for me?"/>
+          <button type="submit" disabled={busy || question.trim().length < 3} aria-label={busy ? 'Reading the notice' : 'Ask question'}>{busy ? <LoaderCircle size={18} className="spin"/> : <Send size={18}/>}</button>
         </div>
+        <p className="ask-guidance" id={inputId + '-help'}>Answers use this version only. Check the quoted passage before acting.</p>
       </form>
       {isConfigured && <p className="ask-privacy">{mode === 'auto' ? 'Automatic may send this notice and question to cloud AI.' : 'Device only stops if the local model is unavailable.'}</p>}
     </>}
@@ -120,6 +124,7 @@ export default function AskPanel({ version, selected, mode }: Props) {
       {error && <p role="alert">{error}</p>}
       {answer && <>
         <small>{sourceLabels[answer.source]}</small>
+        {answer.grounding && answer.grounding !== 'not_stated' && <span className="answer-grounding">{answer.grounding === 'excerpt' ? 'From the source' : 'AI interpretation · source matched'}</span>}
         <h4>{asked}</h4>
         <p>{answer.answer}</p>
         {answer.quote && <SourceExcerpt original={version.text} evidence={answer.quote}/>}

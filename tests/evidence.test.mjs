@@ -63,3 +63,13 @@ test('a claimed addition or removal needs a distinguishing excerpt', () => {
 test('identical notices cannot acquire a change by citing different passages', () => {
   assert.deepEqual(readComparison(comparison([{...change,beforeEvidence:'Return all books',afterEvidence:'by June 17'}]),original,original).changes,[]);
 });
+
+test('comparison paraphrases cannot introduce a date absent from their own evidence', () => {
+  const result = readComparison(comparison([{...change,after:'June 20'}]),original,updated);
+  assert.deepEqual(result.changes,[]);
+});
+
+test('comparison summaries cannot introduce a fabricated year', () => {
+  const raw = JSON.stringify({headline:'A deadline in 2028',summary:'Return books.',changes:[change]});
+  assert.doesNotMatch(readComparison(raw,original,updated).headline,/2028/);
+});

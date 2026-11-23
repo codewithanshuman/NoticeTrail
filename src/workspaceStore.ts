@@ -20,15 +20,27 @@ export async function listWorkspaces(): Promise<Workspace[]> {
   return new Promise((resolve,reject)=>{
     const request=db.transaction('workspaces').objectStore('workspaces').getAll();
     request.onsuccess=()=>resolve(request.result.map((record: Workspace & {storageRevision?:number})=>{
-      const {storageRevision=0,...workspace}=record;
-      if(!revisions.has(workspace.id))revisions.set(workspace.id,storageRevision);
+      const {storageRevision: _revision,...workspace}=record;
       return workspace;
     }));
     request.onerror=()=>reject(request.error);
   });
 }
 export async function loadWorkspace(id:string):Promise<Workspace|null> {
-  return (await listWorkspaces()).find(workspace=>workspace.id===id)??null;
+  const db=await database();
+  return new Promise((resolve,reject)=>{
+    const request=db.transaction('workspaces').objectStore('workspaces').get(id);
+    request.onsuccess=()=>{
+      const record=request.result as (Workspace & {storageRevision?:number}) | undefined;
+      if(!record){revisions.delete(id);resolve(null);return;}
+      const {storageRevision=0,...workspace}=record;
+      // Explicitly reopening adopts the version just read. Background list refreshes
+      // must never move this baseline: doing so could authorize a stale overwrite.
+      revisions.set(id,storageRevision);
+      resolve(workspace);
+    };
+    request.onerror=()=>reject(request.error);
+  });
 }
 async function write(id:string, workspace?:Workspace) {
   const db=await database();

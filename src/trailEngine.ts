@@ -1,6 +1,6 @@
 import type { Brief, Source } from './types';
 import type { Fact, Impact, Relation, Version, Workspace } from './domain';
-import { comparable, indexNotice } from './evidence.ts';
+import { comparable, enclosingPassage, indexNotice, passageQualifiers, unsupportedLiterals } from './evidence.ts';
 
 function identifier(value: string) {
   let hash = 2166136261;
@@ -8,10 +8,18 @@ function identifier(value: string) {
   return (hash >>> 0).toString(36);
 }
 
+export function factChanges(left: Fact, right: Fact): string[] {
+  const fields: [string, string | undefined, string | undefined][] = [
+    ['Type', left.kind, right.kind], ['Title', left.title, right.title],
+    ['Explanation', left.description, right.description], ['Source wording', left.quote, right.quote],
+    ['Date as written', left.rawDate, right.rawDate], ['Obligation', left.obligation, right.obligation],
+    ['Condition', left.condition, right.condition], ['Evidence status', left.status, right.status],
+  ];
+  return fields.filter(([, before, after]) => comparable(before ?? '') !== comparable(after ?? '')).map(([label]) => label);
+}
+
 function sameFact(left: Fact, right: Fact) {
-  return left.kind === right.kind && comparable(left.title) === comparable(right.title) &&
-    comparable(left.quote) === comparable(right.quote) && left.rawDate === right.rawDate &&
-    left.obligation === right.obligation && left.condition === right.condition;
+  return factChanges(left, right).length === 0;
 }
 
 export function graphFromBrief(brief: Brief, text: string, source: Source, previous?: Version, hasImage = false): Version {
@@ -22,21 +30,20 @@ export function graphFromBrief(brief: Brief, text: string, source: Source, previ
 
   function add(kind: Fact['kind'], title: string, evidence: string, description = '', rawDate?: string) {
     const match = locate(evidence);
+    if (!hasImage && new Set(locate.all(evidence).map(item => comparable(enclosingPassage(text, item)))).size > 1) return;
     if (!title.trim()) return;
     if (kind !== 'question' && (!evidence.trim() || (!hasImage && !match))) return;
     let quote = match?.text ?? evidence.trim();
     // Short excerpts can drop the condition that limits an instruction. Keep its
     // enclosing sentence when it supplies an explicit condition.
-    const before = match ? text.slice(0, match.start).split(/(?<=[.!?])\s+|\n+/).at(-1) ?? '' : '';
-    const after = match && !/[.!?]$/.test(quote) ? text.slice(match.end).split(/(?<=[.!?])\s+|\n+/)[0] ?? '' : '';
-    const sentence = hasImage ? quote : before + quote + after;
-    const conditional = sentence.match(/\b(?:if|unless|only if)\b[^,.!?]*/i)?.[0];
-    const optional = /\bmay\s+(?!not\b)|\b(?:optional|optionally|welcome to|can choose to)\b/i.test(sentence);
-    if ((conditional || optional) && match && !hasImage) quote = sentence.trim();
+    const sentence = hasImage || !match ? quote : enclosingPassage(text, match);
+    const { condition: conditional, optional, negative } = passageQualifiers(sentence);
+    if ((conditional || optional || negative) && match && !hasImage) quote = sentence.trim();
     if (rawDate && !indexNotice(quote)(rawDate)) return;
+    if (unsupportedLiterals(title + ' ' + description, quote).length) return;
     const fact: Fact = {
       id: '', kind, title, description, quote,
-      status: match && !hasImage ? 'verified' : 'needs_review',
+      status: match && !hasImage && !(negative && !passageQualifiers(title + ' ' + description).negative) ? 'verified' : 'needs_review',
       obligation: kind === 'question' || optional ? 'suggested' : conditional ? 'conditional' : 'required',
       ...(rawDate ? { rawDate } : {}),
       ...(conditional ? { condition: conditional } : {}),
@@ -74,6 +81,11 @@ export function impacts(workspace: Workspace): Impact[] {
   if (!latest) return [];
   return workspace.tasks.flatMap(task => {
     if (task.versionId === latest.id) return [];
+    // Keeping an earlier step is an explicit decision for one version, never a
+    // blanket dismissal of all future changes. The marker avoids treating old
+    // "keep for now" log entries as a completed review during migration.
+    if (task.reviewVersionId === latest.id && workspace.reviews.some(review =>
+      review.taskId === task.id && review.versionId === latest.id && review.decision === 'kept')) return [];
     const previous = workspace.versions.find(version => version.id === task.versionId)?.nodes.find(node => node.id === task.nodeId);
     const next = latest.nodes.find(node => node.id === task.nodeId);
     if (previous && next && sameFact(previous, next)) return [];
@@ -93,13 +105,31 @@ export function saveNode(workspace: Workspace, nodeId: string, versionId: string
 export function acceptImpact(workspace: Workspace, taskId: string): Workspace {
   const impact = impacts(workspace).find(item => item.task.id === taskId);
   if (!impact?.next) return workspace;
-  const next = impact.next;
+  return matchImpact(workspace, taskId, impact.next.id);
+}
+
+export function matchImpact(workspace: Workspace, taskId: string, nodeId: string): Workspace {
+  const impact = impacts(workspace).find(item => item.task.id === taskId);
+  const next = workspace.versions.at(-1)?.nodes.find(node => node.id === nodeId);
+  if (!impact || !next || next.kind === 'question' || next.kind === 'location' || !next.quote.trim()) return workspace;
+  if (workspace.tasks.some(task => task.id !== taskId && task.nodeId === nodeId)) return workspace;
   return {
     ...workspace,
-    tasks: workspace.tasks.map(task => task.id === taskId ? { ...task, versionId: impact.versionId,
-      title: next.title, quote: next.quote, due: '', reviewVersionId: undefined } : task),
+    tasks: workspace.tasks.map(task => task.id === taskId ? { ...task, nodeId: next.id, versionId: impact.versionId,
+      title: next.title, quote: next.quote, done: false, due: '', reviewVersionId: undefined } : task),
     reviews: [...workspace.reviews, { id: crypto.randomUUID(), taskId, versionId: impact.versionId,
       decision: 'accepted', created: Date.now() }],
+  };
+}
+
+export function keepImpact(workspace: Workspace, taskId: string): Workspace {
+  const impact = impacts(workspace).find(item => item.task.id === taskId);
+  if (!impact) return workspace;
+  return {
+    ...workspace,
+    tasks: workspace.tasks.map(task => task.id === taskId ? { ...task, reviewVersionId: impact.versionId } : task),
+    reviews: [...workspace.reviews, { id: crypto.randomUUID(), taskId, versionId: impact.versionId,
+      decision: 'kept', created: Date.now() }],
   };
 }
 

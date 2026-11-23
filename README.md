@@ -9,7 +9,7 @@ NoticeTrail connects notices, source evidence, document versions, and personal a
 3. Select an object, inspect its supporting words, and save a useful step to **My journey**.
 4. Choose **Save on device** to persist the workspace and subsequent changes in IndexedDB.
 5. Add a revised notice and inspect it in **Time machine**.
-6. Review affected saved steps. Accept a matched update, explicitly choose its revised source, or keep the original for later review.
+6. Review affected saved steps. Accept an update, explicitly match its revised source after reading the evidence, or keep your saved step for that revision.
 7. Confirm a full date, including year, before exporting open steps to your calendar.
 
 The optional garden example uses two fictional, prewritten notices. It is labeled throughout and remains separate from live AI output.
@@ -18,9 +18,11 @@ The optional garden example uses two fictional, prewritten notices. It is labele
 
 Each fact includes its kind, source quote, evidence status, obligation type, and original date wording when present. Relationships carry their own evidence. Text matching verifies that words occur in the notice; the reader must still check their interpretation. Screenshot-derived facts remain marked for review.
 
-Unchanged facts retain identities. Wording changes that cannot be matched confidently require manual source matching. Accepted revisions preserve task identity and completion, and clear the previous confirmed date. Steps awaiting review are excluded from calendar export.
+Unchanged facts retain identities. Wording changes that cannot be matched confidently require manual source matching. Accepted revisions preserve task identity, reopen the step, and clear its previous confirmed date. Keeping a saved step preserves its original source, completion, and date for the reviewed revision; future updates are reviewed again. Steps awaiting review are excluded from calendar export and cannot be marked complete until the review is resolved.
 
-Workspaces start in memory. **Save on device** enables local persistence, including source text, images, versions, tasks, and review history. Delete workspace removes that complete record. Earlier standalone tasks remain available independently. Export workspace downloads a JSON copy.
+Evidence checks preserve conditions, permissions, and negations; reject ambiguous repeated excerpts and unsupported numeric/contact details; and label relationships conservatively. Contextual answers show whether they are a source excerpt or an AI interpretation. These deterministic checks do not prove that every interpretation is correct. Original evidence remains available for review.
+
+Workspaces start in memory. **Save on device** enables local persistence, including source text, images, versions, tasks, and review history. Transaction revision checks prevent stale tabs from overwriting newer work. Explicitly reopening a workspace adopts its latest stored revision. Unsaved work is guarded when leaving. Delete workspace removes that complete record. Earlier standalone tasks remain available independently. Export workspace downloads a JSON copy.
 
 Automatic inference tries the device and may send notice content and questions to cloud AI. Device-only requests stop if local inference is unavailable. Firebase credentials and App Check configuration are still needed to test the live integration in this project.
 
